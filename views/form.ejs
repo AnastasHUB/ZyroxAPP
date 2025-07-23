@@ -1,0 +1,79 @@
+    <% if (typeof notif !== 'undefined' && notif) { %>
+      <div class="notif"><%= notif %></div>
+    <% } %>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= contact.id ? 'Éditer' : 'Ajouter' %> un contact</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1><%= contact.id ? 'Éditer' : 'Ajouter' %> un contact</h1>
+    <form action="<%= action %>" method="<%= method %>">
+      <label>Nom</label>
+      <input type="text" name="nom" value="<%= contact.nom || '' %>" required>
+      <label>Prénom</label>
+      <input type="text" name="prenom" value="<%= contact.prenom || '' %>" required>
+      <label>Numéro de téléphone</label>
+      <input type="text" name="num_tel" value="<%= contact.num_tel || '' %>" required>
+      <label>Adresse</label>
+      <input type="text" name="adresse" id="adresse" autocomplete="off" value="<%= contact.adresse || '' %>" required>
+      <ul id="suggestions" class="suggestions-list"></ul>
+      <label>Statut de contact</label>
+      <select name="contact_statut" required>
+        <% contactStatus.forEach(s => { %>
+          <option value="<%= s %>" <%= contact.contact_statut === s ? 'selected' : '' %>><%= s %></option>
+        <% }) %>
+      </select>
+      <label>Statut de réponse</label>
+      <select name="reponse_statut" required>
+        <% responseStatus.forEach(s => { %>
+          <option value="<%= s %>" <%= contact.reponse_statut === s ? 'selected' : '' %>><%= s %></option>
+        <% }) %>
+      </select>
+      <button type="submit" class="btn">Valider</button>
+      <a href="/" class="btn">Annuler</a>
+    </form>
+  </div>
+  <script>
+    const adresseInput = document.getElementById('adresse');
+    const suggestionsList = document.getElementById('suggestions');
+    let timer;
+    adresseInput.addEventListener('input', function() {
+      clearTimeout(timer);
+      const query = adresseInput.value.trim();
+      if (query.length < 3) {
+        suggestionsList.innerHTML = '';
+        return;
+      }
+      timer = setTimeout(() => {
+        fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}`)
+          .then(res => res.json())
+          .then(data => {
+            suggestionsList.innerHTML = '';
+            if (data.features && data.features.length) {
+              data.features.slice(0,5).forEach(f => {
+                const li = document.createElement('li');
+                li.textContent = f.properties.label;
+                li.className = 'suggestion-item';
+                li.onclick = () => {
+                  adresseInput.value = f.properties.label;
+                  suggestionsList.innerHTML = '';
+                };
+                suggestionsList.appendChild(li);
+              });
+            }
+          });
+      }, 300);
+    });
+    document.addEventListener('click', function(e) {
+      if (!adresseInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+        suggestionsList.innerHTML = '';
+      }
+    });
+  </script>
+</body>
+</html>

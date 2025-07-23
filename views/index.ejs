@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contacts</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Liste des contacts</h1>
+    <form method="get" action="/" class="search-bar">
+      <input type="text" name="q" placeholder="Rechercher..." value="<%= q || '' %>" autocomplete="off">
+      <button type="submit" class="btn">🔍</button>
+    </form>
+    <a href="/add" class="btn">Ajouter un contact</a>
+    <ul class="contact-list">
+      <% contacts.forEach(contact => { %>
+        <li class="contact-item">
+          <div>
+            <strong><%= contact.nom %> <%= contact.prenom %></strong><br>
+            <span>Numéro : <%= contact.num_tel %></span><br>
+            <span>Adresse : <%= contact.adresse %></span><br>
+            <span>Statut contact : <%= contact.contact_statut %></span><br>
+            <span>Statut réponse : <%= contact.reponse_statut %></span>
+          </div>
+          <div class="actions">
+            <a href="/edit/<%= contact.id %>" class="btn">Éditer</a>
+            <form action="/delete/<%= contact.id %>" method="POST" style="display:inline;">
+              <button type="submit" class="btn delete">Supprimer</button>
+            </form>
+          </div>
+        </li>
+      <% }) %>
+    </ul>
+  </div>
+</body>
+</html>
