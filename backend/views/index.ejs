@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contacts ZyroxAPP</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f7f7f7; }
+    .container { max-width: 400px; margin: auto; padding: 1em; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px #ccc; }
+    h1 { text-align: center; font-size: 1.5em; }
+    .contact { border-bottom: 1px solid #eee; padding: 0.5em 0; }
+    .tag { font-size: 0.9em; padding: 2px 8px; border-radius: 6px; margin-left: 8px; }
+    .Refus { background: #ffb3b3; }
+    .Accepté { background: #b3ffb3; }
+    .Acontacter, .Acontacter { background: #ffe0b3; }
+    .Arelancer { background: #b3d1ff; }
+    form { margin-bottom: 1em; }
+    input, select { width: 100%; margin-bottom: 0.5em; padding: 0.5em; border-radius: 5px; border: 1px solid #ccc; }
+    button { width: 100%; padding: 0.7em; border: none; border-radius: 5px; background: #007bff; color: #fff; font-size: 1em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <% if (error) { %>
+      <div style="background:#ffb3b3;color:#900;padding:10px;border-radius:6px;text-align:center;margin-bottom:10px;font-weight:bold;">
+        <%= error %>
+      </div>
+      <form method="POST" action="/update-status" style="margin-bottom:10px;">
+        <input type="hidden" name="telephone" value="<%= contacts.find(c => c.telephone === (typeof error === 'string' && error.includes('Numéro') ? error.split(' ')[2] : '') ) ? error.split(' ')[2] : '' %>">
+        <label for="newtag">Modifier le statut :</label>
+        <select name="newtag" required>
+          <option value="Refus">Refus</option>
+          <option value="A contacter">A contacter</option>
+          <option value="Accepté">Accepté</option>
+          <option value="A relancer">A relancer</option>
+        </select>
+        <button type="submit">Mettre à jour</button>
+      </form>
+    <% } %>
+    <h1>Contacts ZyroxAPP</h1>
+    <form method="POST" action="/add">
+      <input type="text" name="nom" placeholder="Nom" required>
+      <input type="text" name="prenom" placeholder="Prénom" required>
+      <input type="text" name="telephone" placeholder="Téléphone" required>
+      <input type="text" name="adresse" placeholder="Adresse" required>
+      <script src="/autocomplete.js"></script>
+      <select name="tag" required>
+        <option value="Refus">Refus</option>
+        <option value="A contacter">A contacter</option>
+        <option value="Accepté">Accepté</option>
+        <option value="A relancer">A relancer</option>
+      </select>
+      <button type="submit">Ajouter</button>
+    </form>
+    <% contacts.forEach(function(contact) { %>
+      <div class="contact">
+        <strong><%= contact.nom %> <%= contact.prenom %></strong><br>
+        <span><%= contact.telephone %></span><br>
+        <span><%= contact.adresse %></span>
+        <span class="tag <%= contact.tag.replace(/\s/g, '') %>"><%= contact.tag %></span>
+      </div>
+    <% }) %>
+  </div>
+</body>
+</html>
+<script src="/autocomplete.js"></script>
