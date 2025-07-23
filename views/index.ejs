@@ -23,6 +23,9 @@
             <span>Adresse : <%= contact.adresse %></span><br>
             <span>Statut contact : <%= contact.contact_statut %></span><br>
             <span>Statut réponse : <%= contact.reponse_statut %></span>
+           <% if (contact.commentaire) { %>
+             <br><span>Commentaire : <%= contact.commentaire %></span>
+           <% } %>
           </div>
           <div class="actions">
             <a href="/edit/<%= contact.id %>" class="btn">Éditer</a>

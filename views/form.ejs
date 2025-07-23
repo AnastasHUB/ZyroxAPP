@@ -34,6 +34,8 @@
           <option value="<%= s %>" <%= contact.reponse_statut === s ? 'selected' : '' %>><%= s %></option>
         <% }) %>
       </select>
+      <label>Commentaire</label>
+      <textarea name="commentaire" rows="3" placeholder="Commentaire..."><%= contact.commentaire || '' %></textarea>
       <button type="submit" class="btn">Valider</button>
       <a href="/" class="btn">Annuler</a>
     </form>

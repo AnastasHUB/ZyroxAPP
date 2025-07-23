@@ -14,7 +14,8 @@ db.serialize(() => {
     num_tel TEXT,
     adresse TEXT,
     contact_statut TEXT,
-    reponse_statut TEXT
+    reponse_statut TEXT,
+    commentaire TEXT
   )`);
 });
 
@@ -39,8 +40,9 @@ app.get('/', (req, res) => {
       LOWER(num_tel) LIKE ? OR
       LOWER(adresse) LIKE ? OR
       LOWER(contact_statut) LIKE ? OR
-      LOWER(reponse_statut) LIKE ?`;
-    params = Array(6).fill(`%${q}%`);
+      LOWER(reponse_statut) LIKE ? OR
+      LOWER(commentaire) LIKE ?`;
+    params = Array(7).fill(`%${q}%`);
   }
   db.all(sql, params, (err, rows) => {
     res.render('index', { contacts: rows, q });
@@ -54,7 +56,7 @@ app.get('/add', (req, res) => {
 
 // Add contact
 app.post('/add', (req, res) => {
-  const { nom, prenom, num_tel, adresse, contact_statut, reponse_statut } = req.body;
+  const { nom, prenom, num_tel, adresse, contact_statut, reponse_statut, commentaire } = req.body;
   db.get('SELECT * FROM contacts WHERE num_tel = ? OR adresse = ?', [num_tel, adresse], (err, duplicate) => {
     if (duplicate) {
       return res.render('form', {
@@ -67,8 +69,8 @@ app.post('/add', (req, res) => {
         duplicateContact: duplicate
       });
     }
-    db.run('INSERT INTO contacts (nom, prenom, num_tel, adresse, contact_statut, reponse_statut) VALUES (?, ?, ?, ?, ?, ?)',
-      [nom, prenom, num_tel, adresse, contact_statut, reponse_statut],
+    db.run('INSERT INTO contacts (nom, prenom, num_tel, adresse, contact_statut, reponse_statut, commentaire) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [nom, prenom, num_tel, adresse, contact_statut, reponse_statut, commentaire],
       function(err) {
         res.redirect('/');
       }
@@ -86,9 +88,9 @@ app.get('/edit/:id', (req, res) => {
 
 // Edit contact
 app.post('/edit/:id', (req, res) => {
-  const { nom, prenom, num_tel, adresse, contact_statut, reponse_statut } = req.body;
-  db.run('UPDATE contacts SET nom = ?, prenom = ?, num_tel = ?, adresse = ?, contact_statut = ?, reponse_statut = ? WHERE id = ?',
-    [nom, prenom, num_tel, adresse, contact_statut, reponse_statut, req.params.id],
+  const { nom, prenom, num_tel, adresse, contact_statut, reponse_statut, commentaire } = req.body;
+  db.run('UPDATE contacts SET nom = ?, prenom = ?, num_tel = ?, adresse = ?, contact_statut = ?, reponse_statut = ?, commentaire = ? WHERE id = ?',
+    [nom, prenom, num_tel, adresse, contact_statut, reponse_statut, commentaire, req.params.id],
     function(err) {
       res.redirect('/');
     }
