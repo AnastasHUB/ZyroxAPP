@@ -14,7 +14,7 @@ puppeteer.use(AdblockerPlugin({ blockTrackers: true }));
 async function getHtml(url) {
   console.log('[getHtml] URL:', url);
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
