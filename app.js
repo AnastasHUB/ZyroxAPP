@@ -3,6 +3,80 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 const app = express();
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const AdblockerPlugin = require('puppeteer-extra-plugin-adblocker');
+const cheerio = require('cheerio');
+
+puppeteer.use(StealthPlugin());
+puppeteer.use(AdblockerPlugin({ blockTrackers: true }));
+
+async function getHtml(url) {
+  console.log('[getHtml] URL:', url);
+  const browser = await puppeteer.launch({
+    headless: false,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-infobars',
+      '--window-position=0,0',
+      '--ignore-certificate-errors',
+      '--ignore-certificate-errors-spki-list',
+      '--window-size=1920,1080',
+      '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+    ],
+    ignoreDefaultArgs: ['--enable-automation']
+  });
+  const page = await browser.newPage();
+  await page.evaluateOnNewDocument(() => {
+    delete navigator.webdriver;
+    Object.defineProperty(navigator, 'plugins', {
+      get: () => [1, 2, 3, 4, 5]
+    });
+  });
+  await page.goto(url, { waitUntil: 'networkidle2' });
+  await page.mouse.move(100, 200);
+  await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * (3000 - 1000) + 1000)));
+  const content = await page.content();
+  console.log('[getHtml] HTML length:', content.length);
+  await browser.close();
+  return content;
+}
+
+app.get('/api/lookup', async (req, res) => {
+  const num_tel = req.query.num_tel;
+  console.log('[lookup] Recherche pour numéro:', num_tel);
+  if (!num_tel) {
+    console.log('[lookup] Erreur: num_tel requis');
+    return res.status(400).json({ error: 'num_tel requis' });
+  }
+  try {
+    const url = `https://www.pagesjaunes.fr/annuaireinverse/recherche?quoiqui=${num_tel}&univers=annuaireinverse&idOu=`;
+    console.log('[lookup] URL:', url);
+    const html = await getHtml(url);
+    const $ = cheerio.load(html);
+    const name = $('a.bi-denomination h3').first().text().trim();
+    const address = $('div.bi-address.small a').first().contents().filter(function() {
+      return this.type === 'text';
+    }).text().trim();
+    let surname = '', firstName = '';
+    if (name) {
+      const parts = name.split(' ');
+      surname = parts[0] || '';
+      firstName = parts.slice(1).join(' ') || '';
+    }
+    console.log('[lookup] Résultat:', { nom: surname, prenom: firstName, adresse: address });
+    try {
+      res.json({ nom: surname, prenom: firstName, adresse: address });
+      console.log('[lookup] Réponse envoyée au client');
+    } catch (err) {
+      console.log('[lookup] Erreur lors de l\'envoi de la réponse:', err);
+    }
+  } catch (e) {
+    console.log('[lookup] Erreur:', e);
+    res.status(500).json({ error: 'Erreur lors de la récupération', details: e.message });
+  }
+});
 
 // Initialisation SQLite
 const db = new sqlite3.Database('./contacts.db');

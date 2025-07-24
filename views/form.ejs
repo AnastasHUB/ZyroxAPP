@@ -14,11 +14,15 @@
     <h1><%= contact.id ? 'Éditer' : 'Ajouter' %> un contact</h1>
     <form action="<%= action %>" method="<%= method %>">
       <label>Nom</label>
-      <input type="text" name="nom" value="<%= contact.nom || '' %>" required>
+      <input type="text" name="nom" id="nom" value="<%= contact.nom || '' %>" required>
       <label>Prénom</label>
-      <input type="text" name="prenom" value="<%= contact.prenom || '' %>" required>
+      <input type="text" name="prenom" id="prenom" value="<%= contact.prenom || '' %>" required>
       <label>Numéro de téléphone</label>
-      <input type="text" name="num_tel" value="<%= contact.num_tel || '' %>" required>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="text" name="num_tel" id="num_tel" value="<%= contact.num_tel || '' %>" required>
+        <button type="button" id="lookupBtn" class="btn" title="Rechercher infos">🔍</button>
+        <span id="lookupStatus" style="margin-left:4px;"></span>
+      </div>
       <label>Adresse</label>
       <input type="text" name="adresse" id="adresse" autocomplete="off" value="<%= contact.adresse || '' %>" required>
       <ul id="suggestions" class="suggestions-list"></ul>
@@ -39,6 +43,62 @@
       <button type="submit" class="btn">Valider</button>
       <a href="/" class="btn">Annuler</a>
     </form>
+    <script>
+      const lookupBtn = document.getElementById('lookupBtn');
+      const lookupStatus = document.getElementById('lookupStatus');
+      lookupBtn.addEventListener('click', async function() {
+        const num_tel = document.getElementById('num_tel').value.trim();
+        if (!num_tel) return alert('Veuillez entrer un numéro de téléphone.');
+        this.disabled = true;
+        this.textContent = '...';
+        lookupStatus.innerHTML = '<span style="display:inline-block;width:18px;height:18px;"><svg viewBox="0 0 50 50" style="width:100%;height:100%;" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="25" r="20" stroke="#888" stroke-width="5" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.8s" repeatCount="indefinite"/></circle></svg></span>';
+        try {
+          const res = await fetch(`/api/lookup?num_tel=${encodeURIComponent(num_tel)}`);
+          console.log('[client] Status:', res.status);
+          const text = await res.text();
+          console.log('[client] Réponse brute:', text);
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch (err) {
+            console.error('[client] Erreur de parsing JSON:', err);
+            lookupStatus.innerHTML = '<span style="color:red;font-size:18px;">❌</span>';
+            alert('Réponse serveur non valide.');
+            this.disabled = false;
+            this.textContent = '🔍';
+            return;
+          }
+          if (data.error) throw new Error(data.error);
+          console.log('[client] Data à remplir:', data);
+          let found = false;
+          try {
+            document.getElementById('nom').value = data.nom || '';
+            if (data.nom) found = true;
+          } catch(e) {
+            console.error('[client] Erreur champ nom:', e);
+          }
+          try {
+            document.getElementById('prenom').value = data.prenom || '';
+            if (data.prenom) found = true;
+          } catch(e) {
+            console.error('[client] Erreur champ prenom:', e);
+          }
+          try {
+            document.getElementById('adresse').value = data.adresse || '';
+            if (data.adresse) found = true;
+          } catch(e) {
+            console.error('[client] Erreur champ adresse:', e);
+          }
+          lookupStatus.innerHTML = found ? '<span style="color:green;font-size:18px;">✔️</span>' : '<span style="color:red;font-size:18px;">❌</span>';
+        } catch(e) {
+          console.error('[client] Erreur fetch:', e);
+          lookupStatus.innerHTML = '<span style="color:red;font-size:18px;">❌</span>';
+          alert('Aucune information trouvée ou erreur réseau.');
+        }
+        this.disabled = false;
+        this.textContent = '🔍';
+      });
+    </script>
   </div>
   <script>
     const adresseInput = document.getElementById('adresse');
