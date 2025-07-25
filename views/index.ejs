@@ -12,6 +12,7 @@
     <form method="get" action="/" class="search-bar">
       <input type="text" name="q" placeholder="Rechercher..." value="<%= q || '' %>" autocomplete="off">
       <button type="submit" class="btn">🔍</button>
+      <span style="margin-left:12px;font-weight:bold;color:#555;">Contacts : <%= typeof totalContacts !== 'undefined' ? totalContacts : contacts.length %></span>
     </form>
     <a href="/add" class="btn">Ajouter un contact</a>
     <ul class="contact-list">

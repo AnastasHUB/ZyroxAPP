@@ -107,6 +107,7 @@ app.get('/', (req, res) => {
   const q = req.query.q ? req.query.q.trim().toLowerCase() : '';
   let sql = 'SELECT * FROM contacts';
   let params = [];
+  let countSql = 'SELECT COUNT(*) AS total FROM contacts';
   if (q) {
     sql += ` WHERE 
       LOWER(nom) LIKE ? OR
@@ -117,9 +118,13 @@ app.get('/', (req, res) => {
       LOWER(reponse_statut) LIKE ? OR
       LOWER(commentaire) LIKE ?`;
     params = Array(7).fill(`%${q}%`);
+    countSql = 'SELECT COUNT(*) AS total FROM contacts WHERE ' +
+      'LOWER(nom) LIKE ? OR LOWER(prenom) LIKE ? OR LOWER(num_tel) LIKE ? OR LOWER(adresse) LIKE ? OR LOWER(contact_statut) LIKE ? OR LOWER(reponse_statut) LIKE ? OR LOWER(commentaire) LIKE ?';
   }
   db.all(sql, params, (err, rows) => {
-    res.render('index', { contacts: rows, q });
+    db.get(countSql, params, (err2, countRow) => {
+      res.render('index', { contacts: rows, q, totalContacts: countRow ? countRow.total : 0 });
+    });
   });
 });
 
